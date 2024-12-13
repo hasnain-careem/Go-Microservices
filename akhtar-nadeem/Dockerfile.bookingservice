@@ -1,0 +1,35 @@
+# Stage 1: Build bookingservice
+FROM golang:1.23.0 as builder-bookingservice
+WORKDIR /app
+
+# Copy the entire project
+COPY . .
+
+# Download dependencies
+RUN go mod download
+
+# Build the bookingservice binary
+RUN CGO_ENABLED=0 GOOS=linux go build -o /app/bookingservice ./cmd/bookingservice/main.go
+
+# Stage 2: Create the final image
+FROM alpine:latest
+WORKDIR /app
+
+# Install necessary certificates
+RUN apk --no-cache add ca-certificates
+
+# Copy the bookingservice binary from the builder stage
+COPY --from=builder-bookingservice /app/bookingservice .
+
+# Set environment variables
+ENV DB_HOST=db
+ENV DB_USER=postgres
+ENV DB_PASS=postgres
+ENV DB_NAME=careem
+ENV BOOKING_SERVICE_PORT=50052
+
+# Expose necessary ports
+EXPOSE 50052 9091
+
+# Run the bookingservice binary
+CMD ["/app/bookingservice"]

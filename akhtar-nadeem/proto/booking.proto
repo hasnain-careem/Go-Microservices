@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package proto;
+option go_package = "./proto";
+
+import "ride.proto";
+import "google/protobuf/timestamp.proto";
+
+service BookingService {
+  rpc CreateBooking(CreateBookingRequest) returns (CreateBookingResponse) {}
+  rpc GetBooking(GetBookingRequest) returns (GetBookingResponse) {}
+}
+
+message CreateBookingRequest {
+  string user_id = 1;
+  Ride ride = 2; // This references the Ride message defined in ride.proto
+}
+
+message CreateBookingResponse {
+  string booking_id = 1;
+  string user_id = 2;
+  string ride_id = 3;
+  google.protobuf.Timestamp time = 4;
+}
+
+message GetBookingRequest {
+  string booking_id = 1;
+}
+
+message GetBookingResponse {
+  string name = 1;
+  string source = 2;
+  string destination = 3;
+  int32 distance = 4;
+  int32 cost = 5;
+  google.protobuf.Timestamp time = 6;
+  string user_id = 7;
+  string booking_id = 8;
+  string ride_id = 9;
+}

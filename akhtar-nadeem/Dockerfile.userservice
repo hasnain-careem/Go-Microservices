@@ -1,0 +1,35 @@
+# Stage 1: Build userservice
+FROM golang:1.23.0 as builder-userservice
+WORKDIR /app
+
+# Copy the entire project
+COPY . .
+
+# Download dependencies
+RUN go mod download
+
+# Build the userservice binary
+RUN CGO_ENABLED=0 GOOS=linux go build -o /app/userservice ./cmd/userservice/main.go
+
+# Stage 2: Create the final image
+FROM alpine:latest
+WORKDIR /app
+
+# Install necessary certificates
+RUN apk --no-cache add ca-certificates
+
+# Copy the userservice binary from the builder stage
+COPY --from=builder-userservice /app/userservice .
+
+# Set environment variables
+ENV DB_HOST=db
+ENV DB_USER=postgres
+ENV DB_PASS=postgres
+ENV DB_NAME=careem
+ENV USER_SERVICE_PORT=50051
+
+# Expose necessary ports
+EXPOSE 50051 9090
+
+# Run the userservice binary
+CMD ["/app/userservice"]
