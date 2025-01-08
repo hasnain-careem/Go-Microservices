@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package proto;
+option go_package = "./proto";
+
+// UserService definitions
+service UserService {
+  rpc GetUser(GetUserRequest) returns (GetUserResponse) {}
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {}
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse) {}
+}
+
+// User messages
+message GetUserRequest {
+  string user_id = 1;
+}
+
+message GetUserResponse {
+  string name = 1;
+}
+
+message CreateUserRequest {
+  string name = 1;
+}
+
+message CreateUserResponse {
+  string user_id = 1;
+}
+
+message DeleteUserRequest {
+  string user_id = 1;
+}
+
+message DeleteUserResponse {
+  string message = 1;
+}

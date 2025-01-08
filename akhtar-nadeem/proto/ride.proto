@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package proto;
+option go_package = "./proto";
+
+// RidesService and related messages
+service RidesService {
+  rpc UpdateRide(UpdateRideRequest) returns (UpdateRideResponse) {}
+}
+
+message Ride {
+  string source = 1;
+  string destination = 2;
+  int32 distance = 3;
+  int32 cost = 4;
+}
+
+message UpdateRideRequest {
+  string ride_id = 1;
+  Ride ride = 2;
+}
+
+message UpdateRideResponse {
+  string message = 1;
+}
