@@ -12,6 +12,7 @@ import (
 
 	"user-service/config"
 	pb "user-service/pb/proto/user"
+	"user-service/repository"
 	"user-service/server"
 )
 
@@ -31,19 +32,18 @@ func main() {
 
 	fmt.Println("✅ Connected to users_db successfully")
 
-	// Initialize gRPC server
+	userRepo := repository.NewPostgresUserRepository(db)
+
+	userServer := server.NewUserServer(userRepo)
+
 	listener, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		log.Fatalf("❌ Failed to listen on port 50051: %v", err)
 	}
 
 	grpcServer := grpc.NewServer()
-	userServer := &server.UserServer{
-		DB: db,
-	}
 	pb.RegisterUserServiceServer(grpcServer, userServer)
 
-	// Enable reflection
 	reflection.Register(grpcServer)
 
 	fmt.Println("🚀 UserService gRPC server listening on :50051")
