@@ -4,9 +4,16 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net"
 
 	_ "github.com/lib/pq"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+
+
 	"ride-service/config"
+	pb "ride-service/pb/proto/ride"
+	"ride-service/server"
 )
 
 func main() {
@@ -24,4 +31,24 @@ func main() {
 	}
 
 	fmt.Println("✅ Connected to rides_db successfully")
+
+	// Initialize gRPC server
+	listener, err := net.Listen("tcp", ":50052")
+	if err != nil {
+		log.Fatalf("❌ Failed to listen on port 50052: %v", err)
+	}
+
+	grpcServer := grpc.NewServer()
+	rideServer := &server.RideServer{
+		DB: db,
+	}
+	pb.RegisterRideServiceServer(grpcServer, rideServer)
+
+	// Enable reflection
+	reflection.Register(grpcServer)
+
+	fmt.Println("🚀 RideService gRPC server listening on :50052")
+	if err := grpcServer.Serve(listener); err != nil {
+		log.Fatalf("❌ Failed to serve: %v", err)
+	}
 }

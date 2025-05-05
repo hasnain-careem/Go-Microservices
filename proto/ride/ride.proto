@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package ride;
+
+option go_package = "ride-service/pb";
+
+message Ride {
+  int32 ride_id = 1;
+  string source = 2;
+  string destination = 3;
+  int32 distance = 4;
+  int32 cost = 5;
+}
+
+service RideService {
+  rpc CreateRide(CreateRideRequest) returns (CreateRideResponse);
+  rpc GetRide(GetRideRequest) returns (Ride);
+  rpc UpdateRide(UpdateRideRequest) returns (UpdateRideResponse);
+}
+
+message CreateRideRequest {
+  string source = 1;
+  string destination = 2;
+  int32 distance = 3;
+  int32 cost = 4;
+}
+
+message CreateRideResponse {
+  int32 ride_id = 1;
+}
+
+message GetRideRequest {
+  int32 ride_id = 1;
+}
+
+message UpdateRideRequest {
+  int32 ride_id = 1;
+  Ride ride = 2;
+}
+
+message UpdateRideResponse {
+  string message = 1;
+}
