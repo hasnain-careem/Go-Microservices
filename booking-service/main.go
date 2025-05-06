@@ -45,7 +45,8 @@ func main() {
 	}
 	fmt.Println("✅ Connected to bookings_db")
 
-	userConn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+	// Update connection from localhost to container names
+	userConn, err := grpc.Dial("user-service:50051", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("❌ Failed to connect to user-service: %v", err)
 		metrics.IncrementErrorCounter("booking-service", "user_service_connection")
@@ -53,7 +54,7 @@ func main() {
 	defer userConn.Close()
 	userClient := userpb.NewUserServiceClient(userConn)
 
-	rideConn, err := grpc.Dial("localhost:50052", grpc.WithInsecure())
+	rideConn, err := grpc.Dial("ride-service:50052", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("❌ Failed to connect to ride-service: %v", err)
 		metrics.IncrementErrorCounter("booking-service", "ride_service_connection")
