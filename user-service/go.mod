@@ -5,6 +5,7 @@ go 1.24.2
 require github.com/joho/godotenv v1.5.1
 
 require (
+	github.com/hasnain-zafar/go-microservices/common v0.0.0
 	github.com/lib/pq v1.10.9
 	golang.org/x/net v0.35.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
@@ -13,3 +14,5 @@ require (
 	google.golang.org/grpc v1.72.0
 	google.golang.org/protobuf v1.36.5
 )
+
+replace github.com/hasnain-zafar/go-microservices/common => ../common
