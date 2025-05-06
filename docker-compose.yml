@@ -76,7 +76,7 @@ services:
       - DB_PORT=5432
     ports:
       - "50051:50051"
-      - "9091:9091"
+      - "2112:2112"
     networks:
       - microservices-network
     depends_on:
@@ -96,7 +96,7 @@ services:
       - DB_PORT=5432
     ports:
       - "50052:50052"
-      - "9092:9092"
+      - "2113:2113"
     networks:
       - microservices-network
     depends_on:
@@ -116,7 +116,7 @@ services:
       - DB_PORT=5432
     ports:
       - "50053:50053"
-      - "9093:9093"
+      - "2114:2114"
     networks:
       - microservices-network
     depends_on:
@@ -127,6 +127,23 @@ services:
       ride-service:
         condition: service_started
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    networks:
+      - microservices-network
+
 networks:
   microservices-network:
     driver: bridge
@@ -135,3 +152,4 @@ volumes:
   users_db_data:
   rides_db_data:
   bookings_db_data:
+  prometheus_data:

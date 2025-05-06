@@ -64,9 +64,9 @@ docker-compose ps
 
 Prometheus is configured to scrape metrics from all three services:
 
-- User Service metrics: http://localhost:9091/metrics
-- Ride Service metrics: http://localhost:9092/metrics
-- Booking Service metrics: http://localhost:9093/metrics
+- User Service metrics: http://localhost:2112/metrics
+- Ride Service metrics: http://localhost:2113/metrics
+- Booking Service metrics: http://localhost:2114/metrics
 
 
 Access the Prometheus dashboard at: http://localhost:9090
