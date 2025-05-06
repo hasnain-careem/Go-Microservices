@@ -9,6 +9,8 @@ import (
 	ridepb "ride-service/pb/proto/ride"
 	userpb "user-service/pb/proto/user"
 
+	"github.com/hasnain-zafar/go-microservices/common/metrics"
+
 	"github.com/hasnain-zafar/go-microservices/common/errors"
 	"github.com/hasnain-zafar/go-microservices/common/logger"
 )
@@ -20,6 +22,7 @@ type BookingServer struct {
 	rideClient   ridepb.RideServiceClient
 	logger       *logger.Logger
 	errorHandler *errors.ErrorHandler
+	serviceName  string
 }
 
 func NewBookingServer(
@@ -27,18 +30,22 @@ func NewBookingServer(
 	userClient userpb.UserServiceClient,
 	rideClient ridepb.RideServiceClient,
 ) *BookingServer {
-	log := logger.NewLogger("booking-service")
+	serviceName := "booking-service"
+	log := logger.NewLogger(serviceName)
 	return &BookingServer{
 		repo:         repo,
 		userClient:   userClient,
 		rideClient:   rideClient,
 		logger:       log,
 		errorHandler: errors.NewErrorHandler(log),
+		serviceName:  serviceName,
 	}
 }
 
 func (s *BookingServer) CreateBooking(ctx context.Context, req *pb.CreateBookingRequest) (*pb.Booking, error) {
-	s.logger.LogRequest("CreateBooking", req)
+	method := "CreateBooking"
+	metrics.IncrementRequestCounter(s.serviceName, method)
+	s.logger.LogRequest(method, req)
 
 	if err := validateCreateBookingRequest(req); err != nil {
 		return nil, s.errorHandler.HandleInvalidArgument("invalid booking request", err)
@@ -77,13 +84,15 @@ func (s *BookingServer) CreateBooking(ctx context.Context, req *pb.CreateBooking
 		Time:      booking.Time,
 	}
 
-	s.logger.LogResponse("CreateBooking", res)
+	s.logger.LogResponse(method, res)
 
 	return res, nil
 }
 
 func (s *BookingServer) GetBooking(ctx context.Context, req *pb.GetBookingRequest) (*pb.BookingDetails, error) {
-	s.logger.LogRequest("GetBooking", req)
+	method := "GetBooking"
+	metrics.IncrementRequestCounter(s.serviceName, method)
+	s.logger.LogRequest(method, req)
 
 	if req.GetBookingId() <= 0 {
 		return nil, s.errorHandler.HandleInvalidArgument("invalid booking ID", fmt.Errorf("booking ID must be positive"))
@@ -120,7 +129,7 @@ func (s *BookingServer) GetBooking(ctx context.Context, req *pb.GetBookingReques
 		Time:        booking.Time,
 	}
 
-	s.logger.LogResponse("GetBooking", res)
+	s.logger.LogResponse(method, res)
 
 	return res, nil
 }

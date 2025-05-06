@@ -8,8 +8,8 @@ import (
 )
 
 var (
-	DBErrorCount     atomic.Int64
-	NetworkErrorCount atomic.Int64
+	DBErrorCount         atomic.Int64
+	NetworkErrorCount    atomic.Int64
 	ValidationErrorCount atomic.Int64
 )
 
@@ -21,7 +21,8 @@ const (
 )
 
 type Logger struct {
-	logger *slog.Logger
+	logger      *slog.Logger
+	serviceName string
 }
 
 func NewLogger(serviceName string) *Logger {
@@ -34,7 +35,8 @@ func NewLogger(serviceName string) *Logger {
 	)
 
 	return &Logger{
-		logger: logger,
+		logger:      logger,
+		serviceName: serviceName,
 	}
 }
 
@@ -48,8 +50,13 @@ func NewLoggerWithWriter(serviceName string, w io.Writer) *Logger {
 	)
 
 	return &Logger{
-		logger: logger,
+		logger:      logger,
+		serviceName: serviceName,
 	}
+}
+
+func (l *Logger) GetServiceName() string {
+	return l.serviceName
 }
 
 func (l *Logger) Debug(msg string, args ...any) {
@@ -68,10 +75,10 @@ func (l *Logger) Error(msg string, args ...any) {
 	l.logger.Error(msg, args...)
 }
 
-
 func (l *Logger) WithValues(keyValues ...any) *Logger {
 	return &Logger{
-		logger: l.logger.With(keyValues...),
+		logger:      l.logger.With(keyValues...),
+		serviceName: l.serviceName,
 	}
 }
 
@@ -97,8 +104,8 @@ func IncrementValidationErrorCount() {
 
 func GetErrorCounts() map[string]int64 {
 	return map[string]int64{
-		"db_errors":        DBErrorCount.Load(),
-		"network_errors":   NetworkErrorCount.Load(),
+		"db_errors":         DBErrorCount.Load(),
+		"network_errors":    NetworkErrorCount.Load(),
 		"validation_errors": ValidationErrorCount.Load(),
 	}
 }

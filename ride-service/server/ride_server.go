@@ -7,6 +7,8 @@ import (
 	pb "ride-service/pb/proto/ride"
 	"ride-service/repository"
 
+	"github.com/hasnain-zafar/go-microservices/common/metrics"
+
 	"github.com/hasnain-zafar/go-microservices/common/errors"
 	"github.com/hasnain-zafar/go-microservices/common/logger"
 )
@@ -16,19 +18,24 @@ type RideServer struct {
 	repo         repository.RideRepository
 	logger       *logger.Logger
 	errorHandler *errors.ErrorHandler
+	serviceName  string
 }
 
 func NewRideServer(repo repository.RideRepository) *RideServer {
-	log := logger.NewLogger("ride-service")
+	serviceName := "ride-service"
+	log := logger.NewLogger(serviceName)
 	return &RideServer{
 		repo:         repo,
 		logger:       log,
 		errorHandler: errors.NewErrorHandler(log),
+		serviceName:  serviceName,
 	}
 }
 
 func (s *RideServer) CreateRide(ctx context.Context, req *pb.CreateRideRequest) (*pb.CreateRideResponse, error) {
-	s.logger.LogRequest("CreateRide", req)
+	method := "CreateRide"
+	metrics.IncrementRequestCounter(s.serviceName, method)
+	s.logger.LogRequest(method, req)
 
 	if err := validateCreateRideRequest(req); err != nil {
 		return nil, s.errorHandler.HandleInvalidArgument("invalid ride request", err)
@@ -43,13 +50,15 @@ func (s *RideServer) CreateRide(ctx context.Context, req *pb.CreateRideRequest) 
 		RideId: rideID,
 	}
 
-	s.logger.LogResponse("CreateRide", res)
+	s.logger.LogResponse(method, res)
 
 	return res, nil
 }
 
 func (s *RideServer) GetRide(ctx context.Context, req *pb.GetRideRequest) (*pb.Ride, error) {
-	s.logger.LogRequest("GetRide", req)
+	method := "GetRide"
+	metrics.IncrementRequestCounter(s.serviceName, method)
+	s.logger.LogRequest(method, req)
 
 	if req.GetRideId() <= 0 {
 		return nil, s.errorHandler.HandleInvalidArgument("invalid ride ID", fmt.Errorf("ride ID must be positive"))
@@ -71,13 +80,15 @@ func (s *RideServer) GetRide(ctx context.Context, req *pb.GetRideRequest) (*pb.R
 		Cost:        ride.Cost,
 	}
 
-	s.logger.LogResponse("GetRide", res)
+	s.logger.LogResponse(method, res)
 
 	return res, nil
 }
 
 func (s *RideServer) UpdateRide(ctx context.Context, req *pb.UpdateRideRequest) (*pb.UpdateRideResponse, error) {
-	s.logger.LogRequest("UpdateRide", req)
+	method := "UpdateRide"
+	metrics.IncrementRequestCounter(s.serviceName, method)
+	s.logger.LogRequest(method, req)
 
 	if req.GetRideId() <= 0 {
 		return nil, s.errorHandler.HandleInvalidArgument("invalid ride ID", fmt.Errorf("ride ID must be positive"))
@@ -101,7 +112,7 @@ func (s *RideServer) UpdateRide(ctx context.Context, req *pb.UpdateRideRequest) 
 		Message: message,
 	}
 
-	s.logger.LogResponse("UpdateRide", res)
+	s.logger.LogResponse(method, res)
 
 	return res, nil
 }

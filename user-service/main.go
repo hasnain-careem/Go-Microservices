@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 
 	_ "github.com/lib/pq"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
@@ -14,9 +16,17 @@ import (
 	pb "user-service/pb/proto/user"
 	"user-service/repository"
 	"user-service/server"
+
+	"github.com/hasnain-zafar/go-microservices/common/metrics"
 )
 
 func main() {
+	// Initialize Prometheus metrics
+	metrics.Init()
+
+	// Start metrics HTTP server in a goroutine
+	go startMetricsServer("user-service", 2112)
+
 	cfg := config.Load()
 
 	db, err := sql.Open("postgres", cfg.DBUrl)
@@ -49,5 +59,14 @@ func main() {
 	fmt.Println("🚀 UserService gRPC server listening on :50051")
 	if err := grpcServer.Serve(listener); err != nil {
 		log.Fatalf("❌ Failed to serve: %v", err)
+	}
+}
+
+func startMetricsServer(serviceName string, port int) {
+	fmt.Printf("📊 Metrics server for %s starting on :%d\n", serviceName, port)
+	http.Handle("/metrics", promhttp.Handler())
+	err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
+	if err != nil {
+		log.Fatalf("❌ Failed to start metrics server: %v", err)
 	}
 }

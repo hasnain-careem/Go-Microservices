@@ -7,6 +7,8 @@ import (
 	pb "user-service/pb/proto/user"
 	"user-service/repository"
 
+	"github.com/hasnain-zafar/go-microservices/common/metrics"
+
 	"github.com/hasnain-zafar/go-microservices/common/errors"
 	"github.com/hasnain-zafar/go-microservices/common/logger"
 )
@@ -16,19 +18,24 @@ type UserServer struct {
 	repo         repository.UserRepository
 	logger       *logger.Logger
 	errorHandler *errors.ErrorHandler
+	serviceName  string
 }
 
 func NewUserServer(repo repository.UserRepository) *UserServer {
-	log := logger.NewLogger("user-service")
+	serviceName := "user-service"
+	log := logger.NewLogger(serviceName)
 	return &UserServer{
 		repo:         repo,
 		logger:       log,
 		errorHandler: errors.NewErrorHandler(log),
+		serviceName:  serviceName,
 	}
 }
 
 func (s *UserServer) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
-	s.logger.LogRequest("CreateUser", req)
+	method := "CreateUser"
+	metrics.IncrementRequestCounter(s.serviceName, method)
+	s.logger.LogRequest(method, req)
 
 	if req.GetName() == "" {
 		return nil, s.errorHandler.HandleInvalidArgument("invalid user name", fmt.Errorf("name cannot be empty"))
@@ -41,13 +48,15 @@ func (s *UserServer) CreateUser(ctx context.Context, req *pb.CreateUserRequest) 
 
 	res := &pb.CreateUserResponse{UserId: userID}
 
-	s.logger.LogResponse("CreateUser", res)
+	s.logger.LogResponse(method, res)
 
 	return res, nil
 }
 
 func (s *UserServer) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.GetUserResponse, error) {
-	s.logger.LogRequest("GetUser", req)
+	method := "GetUser"
+	metrics.IncrementRequestCounter(s.serviceName, method)
+	s.logger.LogRequest(method, req)
 
 	if req.GetUserId() <= 0 {
 		return nil, s.errorHandler.HandleInvalidArgument("invalid user ID", fmt.Errorf("user ID must be positive"))
@@ -63,13 +72,15 @@ func (s *UserServer) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.G
 
 	res := &pb.GetUserResponse{Name: name}
 
-	s.logger.LogResponse("GetUser", res)
+	s.logger.LogResponse(method, res)
 
 	return res, nil
 }
 
 func (s *UserServer) DeleteUser(ctx context.Context, req *pb.DeleteUserRequest) (*pb.DeleteUserResponse, error) {
-	s.logger.LogRequest("DeleteUser", req)
+	method := "DeleteUser"
+	metrics.IncrementRequestCounter(s.serviceName, method)
+	s.logger.LogRequest(method, req)
 
 	if req.GetUserId() <= 0 {
 		return nil, s.errorHandler.HandleInvalidArgument("invalid user ID", fmt.Errorf("user ID must be positive"))
@@ -85,7 +96,7 @@ func (s *UserServer) DeleteUser(ctx context.Context, req *pb.DeleteUserRequest) 
 
 	res := &pb.DeleteUserResponse{Message: message}
 
-	s.logger.LogResponse("DeleteUser", res)
+	s.logger.LogResponse(method, res)
 
 	return res, nil
 }
