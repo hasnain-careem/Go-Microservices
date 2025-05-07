@@ -215,6 +215,3 @@ docker-compose up -d --no-deps user-service
 - Check container logs: `docker-compose logs -f <service-name>`
 - Verify database migrations ran correctly by connecting to the databases
 
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
