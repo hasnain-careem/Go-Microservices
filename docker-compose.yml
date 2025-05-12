@@ -1,0 +1,155 @@
+version: '3.8'
+
+services:
+  # Database Services
+  users_db:
+    image: postgres:15.4-alpine
+    container_name: users_db
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=users_db
+    volumes:
+      - users_db_data:/var/lib/postgresql/data
+      - ./user-service/db/migrations:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  rides_db:
+    image: postgres:15.4-alpine
+    container_name: rides_db
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=rides_db
+    volumes:
+      - rides_db_data:/var/lib/postgresql/data
+      - ./ride-service/db/migrations:/docker-entrypoint-initdb.d
+    ports:
+      - "5433:5432"
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  bookings_db:
+    image: postgres:15.4-alpine
+    container_name: bookings_db
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=bookings_db
+    volumes:
+      - bookings_db_data:/var/lib/postgresql/data
+      - ./booking-service/db/migrations:/docker-entrypoint-initdb.d
+    ports:
+      - "5434:5432"
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Microservices
+  user-service:
+    build:
+      context: .  # Use the root directory as build context
+      dockerfile: user-service/Dockerfile
+    container_name: user-service
+    environment:
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=users_db
+      - DB_HOST=users_db
+      - DB_PORT=5432
+    ports:
+      - "50051:50051"
+      - "2112:2112"
+    networks:
+      - microservices-network
+    depends_on:
+      users_db:
+        condition: service_healthy
+
+  ride-service:
+    build:
+      context: .  # Use the root directory as build context
+      dockerfile: ride-service/Dockerfile
+    container_name: ride-service
+    environment:
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=rides_db
+      - DB_HOST=rides_db
+      - DB_PORT=5432
+    ports:
+      - "50052:50052"
+      - "2113:2113"
+    networks:
+      - microservices-network
+    depends_on:
+      rides_db:
+        condition: service_healthy
+
+  booking-service:
+    build:
+      context: .  # Use the root directory as build context
+      dockerfile: booking-service/Dockerfile
+    container_name: booking-service
+    environment:
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=bookings_db
+      - DB_HOST=bookings_db
+      - DB_PORT=5432
+    ports:
+      - "50053:50053"
+      - "2114:2114"
+    networks:
+      - microservices-network
+    depends_on:
+      bookings_db:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+      ride-service:
+        condition: service_started
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    networks:
+      - microservices-network
+
+networks:
+  microservices-network:
+    driver: bridge
+
+volumes:
+  users_db_data:
+  rides_db_data:
+  bookings_db_data:
+  prometheus_data:

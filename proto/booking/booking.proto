@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package booking;
+
+option go_package = "booking-service/pb";
+
+message Ride {
+  string source = 1;
+  string destination = 2;
+  int32 distance = 3;
+  int32 cost = 4;
+}
+
+message Booking {
+  int32 booking_id = 1;
+  int32 user_id = 2;
+  int32 ride_id = 3;
+  string time = 4;
+}
+
+message BookingDetails {
+  string name = 1;
+  string source = 2;
+  string destination = 3;
+  int32 distance = 4;
+  int32 cost = 5;
+  string time = 6;
+}
+
+service BookingService {
+  rpc CreateBooking(CreateBookingRequest) returns (Booking);
+  rpc GetBooking(GetBookingRequest) returns (BookingDetails);
+}
+
+message CreateBookingRequest {
+  int32 user_id = 1;
+  Ride ride = 2;
+}
+
+message GetBookingRequest {
+  int32 booking_id = 1;
+}
